@@ -1,10 +1,12 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import json
 
 app = Flask(__name__)
 app.config["DEBUG"] = True
+CORS(app)
 
-data = json.load(open('data.json'))
+data = json.load(open('/home/bgurneet/app-tracker/data.json'))
 
 @app.route('/', methods=['GET'])
 def home():
@@ -16,7 +18,7 @@ def home():
 @app.route('/users', methods=['GET', 'POST'])
 def get_users():
     if request.method == "GET":
-        return data
+        return data, 200
     elif request.method == "POST":
         # id of the user should be generated here
         id = str(max(list(map(int, data))) + 1)
@@ -27,7 +29,7 @@ def get_users():
             new_user = {id: {'id': id, 'name': name, 'applications': applications}}
             data.update(new_user)
             updateJson()
-            return new_user
+            return new_user, 200
         else:
             # unprocessable entity
             return {}, 422
@@ -68,16 +70,16 @@ def get_user_applications(id):
                 }
                 data[id]['applications'].update(new_app)
                 updateJson()
-                return new_app
+                return new_app, 200
             else:
                 # unprocessable entity
                 return {}, 422
 
 def refreshData():
-    data = json.load(open('data.json'))
+    data = json.load(open('/home/bgurneet/app-tracker/data.json'))
 
 def updateJson():
-    json.dump(data, open('data.json', 'w'))
+    json.dump(data, open('/home/bgurneet/app-tracker/data.json', 'w'))
     #print(data)
 
-app.run()
+#app.run()
