@@ -37,9 +37,41 @@ def get_users():
 def get_user(id):
     return (data[id], 200) if id in data else ("404", 404)
 
-@app.route('/users/<id>/applications', methods=['GET'])
+@app.route('/users/<id>/applications', methods=['GET', 'POST'])
 def get_user_applications(id):
-    return (data[id]['applications'], 200) if id in data else ("404", 404)
+    if request.method == "GET":
+        return (data[id]['applications'], 200) if id in data else ("404", 404)
+    elif request.method == "POST":
+        if id not in data:
+            return ("404", 404)
+        else:
+            # create a new application for this user
+            print(data[id]['applications'])
+            app_id = str(max(list(map(int, data[id]['applications']))) + 1)
+            content = request.get_json(silent=True)
+            if 'company' in content and 'position' in content and 'applicationStatus' in content and 'deadline' in content:
+                # all the required data is present
+                company = content.get('company')
+                position = content.get('position')
+                appStatus = content.get('applicationStatus')
+                deadline = content.get('deadline')
+                # notes are optional so handle them accordingly
+                notes = content.get('notes') if 'notes' in content else []
+                new_app = {
+                    app_id: {
+                        "company": company,
+                        "position": position,
+                        "applicationStatus": appStatus,
+                        "deadline": deadline,
+                        "notes": notes
+                    }
+                }
+                data[id]['applications'].update(new_app)
+                updateJson()
+                return new_app
+            else:
+                # unprocessable entity
+                return {}, 422
 
 def refreshData():
     data = json.load(open('data.json'))
